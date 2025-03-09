@@ -15,8 +15,17 @@ public class InfoMenu {
     @FindBy(css = "#__next > div.dp-lw1vya-root > header > div > div.dp-1w2e4gh-root-root > div.dp-1odq4wk-root-root > div.dp-u64fu3-root > a:nth-child(1)")
     WebElement infoMenu;
 
+    @FindBy(css = "img[alt=\"«Авиакомпания «Победа», Группа «Аэрофлот»\"]")
+    WebElement logo;
+
     public void infoMenu() {
         Actions actions = new Actions(driver);
         actions.moveToElement(infoMenu).perform();
+    }
+    public String getPageTitle() {
+        return driver.getTitle();
+    }
+    public boolean logoCheck() {
+        return logo.isDisplayed();
     }
 }

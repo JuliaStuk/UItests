@@ -2,26 +2,20 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.openqa.selenium.By;
-import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
-import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 import java.time.Duration;
 
 public class BaseTests {
     private WebDriver driver;
-    private WebDriverWait wait = new WebDriverWait(driver, Duration.ofMillis(20));
-    LogoCheck logoCheck;
+    private final WebDriverWait wait = new WebDriverWait(driver, Duration.ofMillis(20));
     InfoMenu infoMenu;
     InformationHoverMenu informationHoverMenu;
-    FindPageCheck findPageCheck;
-    Search search;
-    Errors errors;
+    FindFlight findFlight;
+    ControlBooking controlBooking;
 
     @Before
     public void setUp() {
@@ -32,43 +26,64 @@ public class BaseTests {
         driver.manage().timeouts().pageLoadTimeout(Duration.ofSeconds(30));
         driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(30));
         driver.get("https://pobeda.aero/");
+
+        infoMenu = new InfoMenu(driver);
+        informationHoverMenu = new InformationHoverMenu(driver);
+        findFlight = new FindFlight(driver);
+        controlBooking = new ControlBooking(driver);
     }
 
     @Test
-    public void openPobeda() throws InterruptedException {
-        logoCheck = new LogoCheck(driver);
-        infoMenu = new InfoMenu(driver);
-        informationHoverMenu = new InformationHoverMenu(driver);
-        findPageCheck = new FindPageCheck(driver);
-        search = new Search(driver);
-        errors = new Errors(driver);
-
+    public void openPobeda() {
         // Заголовок
-        Assert.assertEquals("Авиакомпания «Победа» - купить авиабилеты онлайн, дешёвые билеты на самолёт, прямые и трансферные рейсы с пересадками", logoCheck.getPageTitle());
-
+        Assert.assertEquals("Авиакомпания «Победа» - купить авиабилеты онлайн, дешёвые билеты на самолёт, прямые и трансферные рейсы с пересадками", infoMenu.getPageTitle());
         // Лого
-        Assert.assertTrue(logoCheck.logoCheck());
+        Assert.assertTrue(infoMenu.logoCheck());
+        //Наводим на инфрормацию
+        infoMenu.infoMenu();
 
-        //скролл
-        WebElement iframe = driver.findElement(By.cssSelector("div.dp-n243ru-root-group > button:nth-child(1)"));
-        new Actions(driver)
-                .scrollToElement(iframe)
-                .perform();
+        //Проверяем заголовки
+        Assert.assertTrue(informationHoverMenu.prepToFlight().contains("Подготовка к полёту"));
+        Assert.assertTrue(informationHoverMenu.info().contains("Полезная информация"));
+        Assert.assertTrue(informationHoverMenu.aboutCompany().contains("О компании"));
+    }
 
-        Assert.assertTrue("Откуда", findPageCheck.fromField());
-        Assert.assertTrue("Куда", findPageCheck.toField());
-        Assert.assertTrue("Туда", findPageCheck.departureDateField());
-        Assert.assertTrue("Обратно", findPageCheck.returnDateField());
+    @Test
+    public void controlBooking() {
+
+        controlBooking.scrollControlBooking();
+
+        controlBooking.clickControlBooking();
+        Assert.assertTrue("Фамилия клиента", controlBooking.clientSurname());
+        Assert.assertTrue("Номер бронирования или билета", controlBooking.numberBooking());
+        Assert.assertTrue("Поиск", controlBooking.findSearch());
+
+        ControlBooking.enterClientSurname("Qwerty");
+        ControlBooking.enterNumberBooking("XXXXX");
+        ControlBooking.clickSearch();
+        Assert.assertTrue(ControlBooking.isNumberBooking());
+    }
+
+    @Test
+    public void findFlight() throws InterruptedException {
+
+        findFlight.scrollFindFlight();
+
+        Assert.assertTrue("Откуда", findFlight.fromField());
+        Assert.assertTrue("Куда", findFlight.toField());
+        Assert.assertTrue("Туда", findFlight.departureDateField());
+        Assert.assertTrue("Обратно", findFlight.returnDateField());
 
         // Ввод критериев поиска
-        Search.enterFrom("Москва");
-        Search.enterTo("Санкт-Петербург");
+        FindFlight.enterFrom("Москва");
+        FindFlight.enterTo("Санкт-Петербург");
 
         // Нажатие кнопки поиска
-        Search.clickSearch();
+        FindFlight.clickSearch();
         Thread.sleep(500);
-        Assert.assertTrue(Errors.isDepartureFieldHighlighted());
+        Assert.assertTrue(FindFlight.isDepartureFieldHighlighted());
     }
+
     @After
     public void tearDown() {
         driver.quit();
