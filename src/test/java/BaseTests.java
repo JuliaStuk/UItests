@@ -69,4 +69,8 @@ public class BaseTests {
         Thread.sleep(500);
         Assert.assertTrue(Errors.isDepartureFieldHighlighted());
     }
+    @After
+    public void tearDown() {
+        driver.quit();
+    }
 }
